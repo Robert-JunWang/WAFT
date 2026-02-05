@@ -16,9 +16,9 @@ Please request the weights from https://ai.meta.com/dinov3/ and fill in the link
 '''
 
 WEIGHTS_URLS = {
-    'vits': None,
-    'vitb': None,
-    'vitl': None
+    'vits': 'weights/dino3/dinov3_vits16_pretrain_lvd1689m-08c60483.pth',
+    'vitb': 'weights/dino3/dinov3_vitb16_pretrain_lvd1689m-73cec8be.pth',
+    'vitl': 'weights/dino3/dinov3_vitl16_pretrain_lvd1689m-8aa4cbdd.pth'
 }
 
 class DinoV3Feature(nn.Module):

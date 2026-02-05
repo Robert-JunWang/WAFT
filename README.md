@@ -42,7 +42,15 @@ Our code is developed with pytorch 2.7.0, CUDA 12.8 and python 3.12.
 ```Shell
 conda create --name waft python=3.12
 conda activate waft
+
+
+git clone --recursive https://github.com/princeton-vl/WAFT
+cd WAFT
 pip install -r requirements.txt
+
+# In case you cloned without --recursive:
+# git submodule update --init
+
 ```
 
 Please also install [xformers](https://github.com/facebookresearch/xformers) following instructions.
