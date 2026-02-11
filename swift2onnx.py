@@ -47,6 +47,9 @@ from model import fetch_model
 from utils.flow_viz import flow_to_image
 from utils.utils import load_ckpt, coords_grid, bilinear_sampler
 
+# from loguru import _Logger
+
+from loguru import logger as trace
 
 cfg = 'config/swift/dinov3/chairs.json'
 # ckpt = 'weights/a2/waftv2-ckpts/dinov3/sintel.pth'
@@ -75,12 +78,15 @@ image2_file = 'assets/frame_0018.png'
 size = 512
 image1, image2 = preprocessing(image1_file, image2_file, size=(size, size))
 
+# logger = _Logger()
+
+trace.info(f'image1:{image1.shape}')
 
 image1 = model.normalize_image(image1).cuda()
 image2 = model.normalize_image(image2).cuda()
 
 out = model.export(image1, image2)
-data = {"image1": image1.cpu(), "image2": image2.cpu()}
-model = model.eval().cpu()
-model.forward = model.export
-export2onnx(model, data, f'onnx/swift_512_coarse_256.onnx')
+# data = {"image1": image1.cpu(), "image2": image2.cpu()}
+# model = model.eval().cpu()
+# model.forward = model.export
+# export2onnx(model, data, f'onnx/swift_512_coarse_256.onnx')

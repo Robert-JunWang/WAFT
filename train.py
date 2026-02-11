@@ -12,7 +12,6 @@ from dataloader.loader import fetch_dataloader
 from utils.utils import load_ckpt
 from utils.ddp_utils import *
 from criterion.loss import sequence_loss
-from loguru import  logger
 # import wandb
 
 os.system("export KMP_INIT_AT_FORK=FALSE")
@@ -49,6 +48,7 @@ def train(args, rank=0, world_size=1, use_ddp=False):
     if rank == 0:
         avg_loss = AverageMeter()
         avg_epe = AverageMeter()
+        from loguru import logger as trace
 
         # if args.algorithm == 'waftv2':
         #     args.exp_name = f"{args.algorithm}-{args.feature_encoder}-{args.seed}"
@@ -94,7 +94,7 @@ def train(args, rank=0, world_size=1, use_ddp=False):
                     avg_epe.update(epe.item())
                     
                 if total_steps % 100 == 0:    
-                    logger.log(f'step: {total_steps}, loss: {avg_loss.avg}, epe: {avg_epe.avg}')
+                    trace.log(f'step: {total_steps}, loss: {avg_loss.avg}, epe: {avg_epe.avg}')
                     avg_loss.reset()
                     avg_epe.reset()
                     cnt_overheat = 0
