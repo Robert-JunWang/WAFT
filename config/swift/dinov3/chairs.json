@@ -9,7 +9,7 @@
     "use_var": true,
     "var_min": 0,
     "var_max": 10,
-    "iters": 2,
+    "iters": 4,
 
     "image_size": [368, 496],
     "scale": 0,
