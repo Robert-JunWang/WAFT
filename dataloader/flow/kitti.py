@@ -15,7 +15,7 @@ from utils import frame_utils
 from dataloader.template import FlowDataset
 
 class KITTI(FlowDataset):
-    def __init__(self, aug_params=None, split='training', root='datasets/KITTI/2015'):
+    def __init__(self, aug_params=None, split='training', root='datasets/KITTI'):
         super(KITTI, self).__init__(aug_params)
         if split == 'testing':
             self.is_test = True

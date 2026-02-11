@@ -15,10 +15,12 @@ from utils import frame_utils
 from dataloader.template import FlowDataset
 
 class MpiSintel(FlowDataset):
-    def __init__(self, aug_params=None, split='training', root='datasets/Sintel', dstype='clean'):
+    def __init__(self, aug_params=None, augmentor=None, split='training', root='datasets/Sintel', dstype='clean'):
         super(MpiSintel, self).__init__(aug_params)
         flow_root = osp.join(root, split, 'flow')
         image_root = osp.join(root, split, dstype)
+
+        self.augmentor = augmentor
 
         if split == 'test':
             self.is_test = True

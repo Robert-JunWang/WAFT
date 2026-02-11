@@ -49,7 +49,7 @@ cd WAFT
 pip install -r requirements.txt
 
 # In case you cloned without --recursive:
-# git submodule update --init
+git submodule update --init
 
 ```
 

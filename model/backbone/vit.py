@@ -80,8 +80,8 @@ class VisionTransformer(nn.Module):
         return {'out': out, 'path_1':path_1, 'path_2':path_2, 'path_3':path_3, 'path_4':path_4}  # path_1 is 1/2; path_2 is 1/4
 
 if __name__ == '__main__':
-    model = VisionTransformer('vitt', 95)
-    input = torch.randn(1, 95, 512, 768)
+    model = VisionTransformer('vitt', 95).cuda()
+    input = torch.randn(1, 95, 512, 512).cuda()
     output = model(input)
     print(output['out'].shape)
     print(output['path_1'].shape)

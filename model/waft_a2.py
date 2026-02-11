@@ -176,3 +176,55 @@ class WAFTv2(nn.Module):
             output = {'flow': flow_predictions, 'info': info_predictions}    
         
         return output
+    
+
+    def export(self, image1, image2, iters=1, flow_gt=None):
+        """ Estimate optical flow between pair of frames """
+        # if iters is None:
+        #     iters = self.args.iters
+
+        flow_predictions = []
+        info_predictions = [] 
+        N, _, H, W = image1.shape
+        fmap1_pretrain = self.encoder(image1)
+        fmap2_pretrain = self.encoder(image2)
+        print('fmap1_pretrain', fmap1_pretrain.shape)
+
+        fmap1_img = self.fnet(image1)[0]
+        fmap2_img = self.fnet(image2)[0]
+        print('fnet', fmap1_img.shape)
+
+        fmap1_2x = self.fmap_conv(torch.cat([fmap1_pretrain, fmap1_img], dim=1))
+        fmap2_2x = self.fmap_conv(torch.cat([fmap2_pretrain, fmap2_img], dim=1))
+        print('fmap1_2x', fmap1_2x.shape)
+        # return fmap1_2x, fmap2_2x
+    
+        net = self.hidden_conv(torch.cat([fmap1_2x, fmap2_2x], dim=1))
+        print('net', net.shape)
+        flow_2x = torch.zeros(N, 2, H//2, W//2).to(image1.device)
+        for itr in range(iters):
+            flow_2x = flow_2x.detach()
+            print('flow_2x', flow_2x.shape)
+            coords2 = (coords_grid(N, H//2, W//2, device=image1.device) + flow_2x).detach()
+            warp_2x = bilinear_sampler(fmap2_2x, coords2.permute(0, 2, 3, 1))
+            refine_inp = self.warp_linear(torch.cat([fmap1_2x, warp_2x, net, flow_2x], dim=1))
+            print(f'==={itr}', 'refine_inp', refine_inp.shape)
+            refine_outs = self.refine_net(refine_inp)
+            print('refine_outs', refine_outs['out'].shape)
+            net = self.refine_transform(torch.cat([refine_outs['out'], net], dim=1))
+            print('net', net.shape)
+            flow_update = self.flow_head(net)
+            print('flow_update', flow_update.shape)
+            weight_update = .25 * self.upsample_weight(net)
+            flow_2x = flow_2x + flow_update[:, :2]
+            info_2x = flow_update[:, 2:]
+            # upsample predictions
+            flow_up, info_up = self.upsample_data(flow_2x, info_2x, weight_update)
+            flow_predictions.append(flow_up)
+            info_predictions.append(info_up)
+
+
+        # output = {'flow': flow_predictions, 'info': info_predictions}    
+        
+        # return output
+        return flow_predictions[-1]

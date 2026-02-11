@@ -8,6 +8,7 @@ build
 demo
 wandb
 runs
+onnx/
 results
 */__pycache__/*
 checkpoints

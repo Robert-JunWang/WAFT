@@ -12,7 +12,7 @@ from dataloader.loader import fetch_dataloader
 from utils.utils import load_ckpt
 from utils.ddp_utils import *
 from criterion.loss import sequence_loss
-
+from loguru import  logger
 import wandb
 
 os.system("export KMP_INIT_AT_FORK=FALSE")
@@ -50,16 +50,18 @@ def train(args, rank=0, world_size=1, use_ddp=False):
         avg_loss = AverageMeter()
         avg_epe = AverageMeter()
 
-        if args.algorithm == 'waftv2':
-            args.exp_name = f"{args.algorithm}-{args.feature_encoder}-{args.seed}"
-        else:
-            args.feature_encoder = 'dav2'
-            args.exp_name = f"{args.algorithm}-{args.feature_encoder}-{args.seed}"
+        # if args.algorithm == 'waftv2':
+        #     args.exp_name = f"{args.algorithm}-{args.feature_encoder}-{args.seed}"
+        # else:
+        #     args.feature_encoder = 'dav2'
+        #     args.exp_name = f"{args.algorithm}-{args.feature_encoder}-{args.seed}"
 
-        wandb.init(
-            project=args.name,
-            name=args.exp_name,
-        )
+        args.exp_name = f"{args.algorithm}-{args.feature_encoder}-{args.seed}"
+
+        # wandb.init(
+        #     project=args.name,
+        #     name=args.exp_name,
+        # )
     if args.restore_ckpt is not None:
         load_ckpt(model, args.restore_ckpt)
         print(f"restore ckpt from {args.restore_ckpt}")
@@ -92,7 +94,7 @@ def train(args, rank=0, world_size=1, use_ddp=False):
                     avg_epe.update(epe.item())
                     
                 if total_steps % 100 == 0:    
-                    wandb.log({"loss": avg_loss.avg, "epe": avg_epe.avg})
+                    logger.log({"loss": avg_loss.avg, "epe": avg_epe.avg})
                     avg_loss.reset()
                     avg_epe.reset()
                     cnt_overheat = 0
@@ -117,7 +119,7 @@ def train(args, rank=0, world_size=1, use_ddp=False):
         save_dir = os.path.join('checkpoints', str(args.name), str(args.algorithm), str(args.feature_encoder), str(args.seed))
         os.makedirs(save_dir, exist_ok=True)
         torch.save(model.module.state_dict(), os.path.join(save_dir, 'final.pth'))
-        wandb.finish()
+        # wandb.finish()
 
 def main(rank, world_size, args, use_ddp):
     if use_ddp:

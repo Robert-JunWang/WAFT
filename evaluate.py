@@ -64,12 +64,65 @@ def update_metrics(args, output, flow_gt, valid):
         val_fl.update(100 * out[i][val[i]].sum().item(), val[i].sum().item())
         val_loss.update(loss[i][val[i]].mean().item(), 1)
 
+# def resize(image1, image2, flow, valid, size=(384,512)):
+#     h, w = image1.shape[-2:]
+#     scale_x = size[1]/w
+#     scale_y = size[0]/h
+
+#     # mask = (valid > 0.5)
+#     image1 = F.interpolate(image1, scale_factor=(scale_y, scale_x), mode='bilinear', align_corners=True)
+#     image2 = F.interpolate(image2, scale_factor=(scale_y, scale_x), mode='bilinear', align_corners=True)
+#     flow = F.interpolate(flow, scale_factor=(scale_y, scale_x), mode='bilinear', align_corners=True)
+#     valid = F.interpolate(valid, scale_factor=(scale_y, scale_x), mode='bilinear', align_corners=True)
+
+#     flow = flow * [scale_x, scale_y] / (valid + 1e-5)[:, :, None]
+     
+ 
+#     return image1, image2, flow, valid
+
+
+import cv2
+class ResizeAugmentor:
+    def __init__(self, h, w):
+        # spatial augmentation params
+        self.h = h
+        self.w = w
+
+
+
+    def __call__(self, image1, image2, flow, valid):
+
+        print('image1',image1.shape, 'flow', flow.shape, 'valid', valid.shape)
+
+
+        h, w = image1.shape[-2:]
+        scale_x = self.w/w
+        scale_y = self.h/h
+
+        valid = (valid.astype(np.float32) > 0.5).astype(bool)
+
+        image1 = cv2.resize(image1, None, fx=scale_x, fy=scale_y, interpolation=cv2.INTER_LINEAR)
+        image2 = cv2.resize(image2, None, fx=scale_x, fy=scale_y, interpolation=cv2.INTER_LINEAR)
+    
+        flow[~valid] = 0           
+        valid = valid.astype(np.float32)
+        flow = cv2.resize(flow, None, fx=scale_x, fy=scale_y, interpolation=cv2.INTER_LINEAR)
+        valid = cv2.resize(valid, None, fx=scale_x, fy=scale_y, interpolation=cv2.INTER_LINEAR)
+    
+        flow = flow * [scale_x, scale_y] / (valid + 1e-5)[:, :, None]
+        valid = (valid.astype(np.float32) > 0.5).astype(bool)
+        flow[~valid] = 0
+
+        return image1, image2, flow, valid
+
+
 @torch.no_grad()
 def validate_sintel(args, model):
     """ Peform validation using the Sintel (train) split """
+    augmentor = ResizeAugmentor(h=384, w=512)
     for dstype in ['clean', 'final']:
         reset_all_metrics()
-        val_dataset = MpiSintel(split='training', dstype=dstype)
+        val_dataset = MpiSintel(split='training', augmentor=augmentor, dstype=dstype)
         val_loader = data.DataLoader(val_dataset, batch_size=1, 
             pin_memory=False, shuffle=False, num_workers=16, drop_last=False)
         pbar = tqdm(total=len(val_loader))
